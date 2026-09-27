@@ -8,6 +8,8 @@ import jwt from "jsonwebtoken";
 import { signToken } from "../utils/token";
 import { areFriends, findFriendship, statusFriendship } from "../services/FriendshipService";
 import { Friendship } from "../entities/Friendship";
+import path from "path";
+import fs from "fs";
 
 
 export const createUser = async (req: Request, res: Response) => {
@@ -112,7 +114,7 @@ export const changePassword = async (req: Request, res: Response) => {
         await userRepo.save(user);
         
         await sendResetPassword(email, token);
-        res.json({ message: "Password resent email sent!"});
+        res.json({ message: "Password reset email sent!"});
 
     }catch (err: any){
         console.log(err);
@@ -151,6 +153,22 @@ export const savePassword = async (req: Request, res: Response) => {
     await userRepo.save(user);
     console.log("Password successfully changed!");
     res.json({ message: "Password successfully changed!"});
+
+};
+
+export const showResetPasswordPage = async ( req: Request, res: Response) => {
+  
+    const token = req.query.token as string;
+
+  if (!token) {
+    return res.status(400).send("Invalid reset link.");
+  }
+
+  const filePath = path.join(process.cwd(), "views", "reset-password.html");
+  let html = fs.readFileSync(filePath, "utf-8");
+
+  html = html.replace("{{RESET_TOKEN}}",token);
+  res.send(html);
 
 };
 

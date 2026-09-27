@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changePassword, createUser, getUsers, verifyEmail, savePassword, googleCallback, getInfos, login, sendFriendRequest, acceptFriendsRequest, updateProfile } from "../controllers/UserController";
+import { changePassword, createUser, getUsers, verifyEmail, savePassword, googleCallback, getInfos, login, sendFriendRequest, acceptFriendsRequest, updateProfile, showResetPasswordPage } from "../controllers/UserController";
 import passport from "../services/GoogleService";
 import "../services/FacebookService";
 import { authMiddleware } from "../middlewares/authMiddleware";
@@ -108,6 +108,7 @@ router.get("/verify", verifyEmail);
 router.post("/users/reset-password", changePassword);
 
 
+
 /**
  * @openapi
  * paths:
@@ -153,6 +154,7 @@ router.post("/users/reset-password", changePassword);
  *                         value: Token has expired.
  */
 router.post("/reset", savePassword);
+router.get("/reset-password", showResetPasswordPage);
 
 
 /**

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { secureStorage, tokenStorage } from '@/src/utils/storage';
 import { IAuthContextValue, IAuthSession, IAuthUser } from '@/src/types/auth';
 import { StorageKeys } from '@/src/constants/config';
-import { useLoginMutation, useRegisterMutation } from '@/src/store/api/authApi';
+import { useLoginMutation, useRegisterMutation, useRequestResetPasswordMutation } from '@/src/store/api/authApi';
 
 const AuthContext = createContext<IAuthContextValue | null>(null);
 
@@ -13,6 +13,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initializing, setInitializing] = useState(true);
   const [login] = useLoginMutation();
   const [register] = useRegisterMutation();
+  const [requestResetPassword] = useRequestResetPasswordMutation();
 
   useEffect(() => {
     secureStorage.get<IAuthSession>(SESSION_KEY).then((restored) => {
@@ -91,11 +92,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await persistSession(null);
   }, [persistSession]);
 
+
   const resetPassword = useCallback(async (email: string) => {
     if (!email) {
       throw new Error('Sıfırlama e-postası gönderilemedi.');
     }
-  }, []);
+
+    try{
+      const result = await requestResetPassword({email}).unwrap();
+      return result;
+     
+    }catch(error: any){
+      const message = error?.data?.message || error?.message || "Sıfırlama e-postası gönderilemedi.";
+      throw new Error(message);
+    }
+
+  }, [requestResetPassword]);
+
 
   const value: IAuthContextValue = {
     session,

@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "backgroundColor": "#f7f8fa",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "musicroom",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true

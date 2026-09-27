@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendVerificationEmail = async (to: string, token: string) => {
 
-    const link = `http://192.168.1.124:3000/verify?token=${token}`;
+    const link = `${process.env.BACKEND_PUBLIC_URL}/verify?token=${token}`;
 
     await transporter.sendMail({
         
@@ -33,7 +33,7 @@ export const sendVerificationEmail = async (to: string, token: string) => {
 
 export const sendResetPassword = async (to: string, token: string) => {
 
-    const link = `http://192.168.1.124:3000/reset?token=${token}`;
+    const link = `${process.env.BACKEND_PUBLIC_URL}/reset-password?token=${encodeURIComponent(token)}`;
 
     await transporter.sendMail({
         

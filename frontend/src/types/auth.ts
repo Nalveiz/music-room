@@ -26,5 +26,5 @@ export interface IAuthContextValue {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (name: string, surname: string, username: string, email: string, password: string, birth_date?: string,) => Promise<{message:string}>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<{message: string}>;
 }

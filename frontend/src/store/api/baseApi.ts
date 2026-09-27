@@ -3,10 +3,12 @@ import { AppConfig } from '@/src/constants/config';
 import { IApiResponse } from '@/src/types';
 import { tokenStorage } from '@/src/utils/storage';
 
+const BACKEND_IP = process.env.EXPO_PUBLIC_BACKEND_IP_ADDRESS;
+
 export const baseApi = createApi({
   reducerPath: 'baseApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: AppConfig.API_BASE_URL,
+    baseUrl: `http://${BACKEND_IP}:3000`,
     timeout: AppConfig.API_TIMEOUT_MS,
     prepareHeaders: async (headers) => {
       try {

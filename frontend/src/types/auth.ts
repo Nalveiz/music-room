@@ -4,7 +4,7 @@ export interface IAuthUser {
   surname: string;
   username: string;
   email: string;
-  // profile_photo?: string | null;
+  profile_photo?: string | null;
 }
 
 export interface IAuthSession {
@@ -27,4 +27,5 @@ export interface IAuthContextValue {
   signUp: (name: string, surname: string, username: string, email: string, password: string, birth_date?: string,) => Promise<{message:string}>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{message: string}>;
+  googleSignIn: () => Promise<void>;
 }

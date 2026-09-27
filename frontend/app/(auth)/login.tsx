@@ -17,7 +17,7 @@ import { showToast } from '@/src/components/common/Toast';
 
 export default function LoginScreen() {
   const colors = useThemeColors();
-  const { signIn } = useAuth();
+  const { signIn, googleSignIn } = useAuth();
 
   const handleSubmit = async (values: ILoginFormValues) => {
     try {
@@ -85,6 +85,17 @@ export default function LoginScreen() {
               onPress={() => handleSubmit()}
               loading={isSubmitting}
               style={styles.submitBtn}
+            />
+
+            <Button
+              label="Google ile giriş yap"
+              onPress={async () => {
+                try {
+                  await googleSignIn();
+                } catch (error) {
+                  showToast((error as Error).message);
+                }
+              }}
             />
           </View>
         )}

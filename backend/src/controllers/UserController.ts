@@ -182,20 +182,18 @@ export const googleCallback = async (req: Request, res: Response) => {
     }
 
     const token = signToken(user);
+    const userData = {
+        id: String(user.id),
+        name: user.name,
+        surname: user.surname,
+        username: user.surname,
+        email: user.email,
+        profile_photo: user.profile_photo ?? null,
+    };
 
-    res.status(200).json({
-        success: true,
-        message: "Login successfull",
-        token,
-        user: {
-            id: user.id,
-            name: user.name,
-            surname: user.surname,
-            email: user.email,
-            profile_photo: user.profile_photo,
-        },
-    });
+    const redirectURI = `musicroom://auth/google?token=${encodeURIComponent(token)}&user=${encodeURIComponent(JSON.stringify(userData))}`;
 
+    return res.redirect(redirectURI);
 };
 
 

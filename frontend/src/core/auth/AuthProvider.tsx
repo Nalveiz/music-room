@@ -3,9 +3,10 @@ import { secureStorage, tokenStorage } from '@/src/utils/storage';
 import { IAuthContextValue, IAuthSession, IAuthUser } from '@/src/types/auth';
 import { StorageKeys } from '@/src/constants/config';
 import { useLoginMutation, useRegisterMutation, useRequestResetPasswordMutation } from '@/src/store/api/authApi';
+import { googleAuth } from '@/src/services/googleAuth';
+
 
 const AuthContext = createContext<IAuthContextValue | null>(null);
-
 const SESSION_KEY = StorageKeys.AUTH_SESSION;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -14,6 +15,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [login] = useLoginMutation();
   const [register] = useRegisterMutation();
   const [requestResetPassword] = useRequestResetPasswordMutation();
+
 
   useEffect(() => {
     secureStorage.get<IAuthSession>(SESSION_KEY).then((restored) => {
@@ -110,6 +112,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [requestResetPassword]);
 
 
+  const googleSignIn = useCallback(async () => {
+
+    try{
+      const result = await googleAuth();
+
+      const user: IAuthUser = {
+        id: Number(result.user.id),
+        name: result.user.name,
+        surname: result.user.surname,
+        username: result.user.username,
+        email: result.user.email,
+        profile_photo: result.user.profile_photo,
+      }
+      
+      const session = { user, accessToken: result.token }
+      await persistSession(session);
+
+    }catch(error){
+      console.error('Google sign in error:', error);
+      throw error;
+    }
+
+  }, [persistSession]);
+
+
+
   const value: IAuthContextValue = {
     session,
     user: session?.user ?? null,
@@ -118,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     resetPassword,
+    googleSignIn,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

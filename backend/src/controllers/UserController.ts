@@ -270,6 +270,27 @@ export const updateProfile = async (req: Request, res: Response) => {
 };
 
 
+export const getProfileVisibility = async (req: Request, res: Response) => {
+    const userRepo = AppDataSource.getRepository(User);
+    const user = await userRepo.findOneBy({ id: req.userId,});
+
+    if (!user) {
+        return res.status(404).json({ message: "User not found.", });
+    }
+
+    return res.status(200).json({
+        name_visibility: user.name_visibility,
+        surname_visibility: user.surname_visibility,
+        username_visibility: user.username_visibility,
+        created_date_visibility: user.created_date_visibility,
+        profile_photo_visibility: user.profile_photo_visibility,
+        birth_date_visibility: user.birth_date_visibility,
+        email_visibility: user.email_visibility,
+    });
+
+};
+
+
 export const updateProfileVisibility = async (req: Request, res: Response) => {
 
     const visibilityFields = ["name_visibility", "surname_visibility", "username_visibility", "email_visibility", "created_date_visibility", "profile_photo_visibility", "birth_date_visibility"] as const;
@@ -279,7 +300,7 @@ export const updateProfileVisibility = async (req: Request, res: Response) => {
     const updates: Partial<Record<visibilityField, Visibility>> = {};
 
     for (const field of visibilityFields){
-        if (req.body[field] !== "undifined"){
+        if (req.body[field] !== undefined){
 
             const value = req.body[field];
 

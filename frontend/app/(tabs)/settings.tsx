@@ -4,6 +4,9 @@ import { Sun, Moon, Monitor } from 'lucide-react-native';
 import { BaseComponent } from '@/src/core/base/BaseComponent';
 import { useThemeColors, useThemeMode } from '@/src/theme/ThemeProvider';
 import { AppThemeMode } from '@/src/types';
+import { Button } from '@/src/components/common/Button';
+import { useAuth } from '@/src/core/auth/AuthProvider';
+
 
 const THEME_OPTIONS: { mode: AppThemeMode; label: string; icon: typeof Sun }[] = [
   { mode: 'light', label: 'Light', icon: Sun },
@@ -14,6 +17,8 @@ const THEME_OPTIONS: { mode: AppThemeMode; label: string; icon: typeof Sun }[] =
 export default function SettingsScreen() {
   const colors = useThemeColors();
   const { themeMode, setMode } = useThemeMode();
+  const { user, signOut } = useAuth();
+
 
   return (
     <BaseComponent isLoading={false} isError={false} scrollable>
@@ -64,6 +69,14 @@ export default function SettingsScreen() {
           })}
         </View>
       </View>
+
+      <Button
+            label="Çıkış Yap"
+            variant="outline"
+            onPress={() => signOut()}
+            style={styles.logoutBtn}
+          />
+
     </BaseComponent>
   );
 }
@@ -110,5 +123,8 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
+  },
+   logoutBtn: {
+    marginTop: 16,
   },
 });

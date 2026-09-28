@@ -1,11 +1,12 @@
 import { baseApi } from './baseApi';
-import { IApiResponse, ILoginRequest, IUserProfile } from '@/src/types';
+import { IApiResponse, IAuthUser, ILoginRequest, IUserProfile, Visibility, IProfileVisibility } from '@/src/types';
 
 
 export interface IAuthResult {
   accessToken: string;
-  user: IUserProfile;
+  user: IAuthUser;
 }
+
 
 
 export const authApi = baseApi.injectEndpoints({
@@ -46,6 +47,7 @@ export const authApi = baseApi.injectEndpoints({
         birth_date?: string | null;
         email?: string;
         auth_provider?: string;
+        created_date?: string;
       }): IUserProfile => {
         return {
           name: response.name,
@@ -55,6 +57,7 @@ export const authApi = baseApi.injectEndpoints({
           birth_date: response.birth_date ?? null,
           email: response.email,
           auth_provider: response.auth_provider,
+          created_date: response.created_date ?? null,
         };
       },
       providesTags: ['Profile'],
@@ -91,6 +94,24 @@ export const authApi = baseApi.injectEndpoints({
     }),
   }),
 
+  getProfileVisibility: builder.query<IProfileVisibility, void>({
+    query: () => '/users/me/visibility',
+  }),
+
+  updateProfileVisibility: builder.mutation<{
+    message: string;
+    visibility: IProfileVisibility;
+  },
+  Partial <IProfileVisibility>
+  >({
+    query: (body) => ({
+      url: '/users/me/visibility',
+      method: 'PATCH',
+      body,
+    }),
+  }),
+
+
   }),
 });
 
@@ -102,4 +123,6 @@ export const {
   useLogoutMutation,
   useRegisterMutation,
   useRequestResetPasswordMutation,
+  useGetProfileVisibilityQuery,
+  useUpdateProfileVisibilityMutation,
 } = authApi;

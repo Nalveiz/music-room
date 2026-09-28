@@ -1,25 +1,136 @@
-import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
-import { useGetProfileQuery } from '@/src/store/api/authApi';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
+import { useGetProfileQuery, useGetProfileVisibilityQuery, useUpdateProfileVisibilityMutation } from '@/src/store/api/authApi';
 import { BaseComponent } from '@/src/core/base/BaseComponent';
 import { useThemeColors } from '@/src/theme/ThemeProvider';
 import { ErrorHandler } from '@/src/core/exceptions/ErrorHandler';
 import { Button } from '@/src/components/common/Button';
 import { useAuth } from '@/src/core/auth/AuthProvider';
 import { LogOut } from 'lucide-react-native';
+import { IProfileVisibility, Visibility } from '@/src/types';
+
 
 export default function ProfileScreen() {
   const colors = useThemeColors();
   const { user, signOut } = useAuth();
-
   const userId = user?.id;
+  
   const { data, isLoading, isError, error, refetch, } = useGetProfileQuery(userId!, {skip: !userId,});
+  
+  const { data: visibilityData, isLoading: isVisibilityLoading, isError: isVisibilityError, error: visibilityError, } = useGetProfileVisibilityQuery();
+  
+  const [updateProfileVisibility, {isLoading: isUpdatingVisibility,},] = useUpdateProfileVisibilityMutation();
+  
+  const [visibility, setVisibility] = useState<IProfileVisibility | null>(null);
+  useEffect(() => {
+    if (visibilityData) {
+      setVisibility(visibilityData);
+    }
+  }, [visibilityData]);
+
+  // if (isVisibilityError){
+  //   ErrorHandler.log(visibilityError, 'ProfileScreen.getProfileVisibility');
+  // }
 
   const handleRetry= useCallback(() => refetch(), [refetch]);
 
-  if (isError) {
-    ErrorHandler.log(error, 'ProfileScreen.getProfile');
-  }
+  // if (isError) {
+  //   ErrorHandler.log(error, 'ProfileScreen.getProfile');
+  // }
+
+  // change visibility
+
+  const changeVisibility = (
+    field: keyof IProfileVisibility,
+    value: Visibility
+  ) => {
+    setVisibility((current) => {
+      if (!current){
+        return current;
+      }
+      return { ...current, [field]: value, };
+    });
+  };
+
+  // save visibility
+
+  const handleSaveVisibility = async () => {
+    if (!visibility) {
+      return;
+    }
+    
+    try {
+      await updateProfileVisibility(visibility).unwrap();
+    } catch(error){
+      ErrorHandler.log(error, 'ProfileScreen.updateProfileVisibility');
+    }
+    
+  };
+
+  // visibility label
+
+  const getVisibilityLabel = (value: Visibility) => {
+    switch (value) {
+      case 'public':
+        return 'Herkese Açık';
+      case 'friends':
+        return 'Arkadaşlar';
+      case 'private':
+        return 'Gizli';
+      default:
+        return '';
+    }
+  };
+
+  const VisibilitySelector = ({
+      value,
+      onChange,
+    }: {
+      value: Visibility;
+      onChange: (value: Visibility) => void;
+    }) => {
+      return (
+        <View style={styles.visibilityOptions}>
+          {(['public', 'friends', 'private'] as Visibility[]).map(
+            (option) => {
+              const isSelected = value === option;
+  
+              return (
+                <Pressable
+                  key={option}
+                  onPress={() => onChange(option)}
+                  style={[
+                    styles.visibilityOption,
+                    {
+                      borderColor: isSelected
+                        ? colors.primary[600]
+                        : colors.border,
+  
+                      backgroundColor: isSelected
+                        ? colors.primary[600]
+                        : colors.surface,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.visibilityOptionText,
+                      {
+                        color: isSelected
+                          ? '#ffffff'
+                          : colors.text,
+                      },
+                    ]}
+                  >
+                    {getVisibilityLabel(option)}
+                  </Text>
+                </Pressable>
+              );
+            }
+          )}
+        </View>
+      );
+    };
 
   return (
     <BaseComponent
@@ -36,14 +147,14 @@ export default function ProfileScreen() {
 
       {data && (
         <>
-        {/* Public infos */}
+        {/* General public infos */}
         <View
           style={[
             styles.card,
             { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
         >
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>Herkese Açık Bilgiler</Text>
+          <Text style={[styles.sectionTitle, {color: colors.text}]}>Profil Bilgileri</Text>
 
           <View style={styles.infoRow}>
             <Text style={[styles.label, {color: colors.textMuted}]}>Ad</Text>
@@ -61,7 +172,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* // Friends-only */}
         <View 
           style={[styles.card, {backgroundColor: colors.surface, borderColor: colors.border,},]}
         >
@@ -96,7 +206,6 @@ export default function ProfileScreen() {
 
         </View>
           
-        {/* Private */}
         <View 
           style={[styles.card, {backgroundColor: colors.surface, borderColor: colors.border,},]}
         >
@@ -115,6 +224,84 @@ export default function ProfileScreen() {
 
         </View>
       </>
+      )}
+
+      {/* visibility settings */}
+
+      {visibility && (
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Görünürlük Ayarları </Text>
+
+          <Text style={[styles.description, { color: colors.textMuted }]}>Profil bilgilerinin kimler tarafından görülebileceğini belirleyebilirsin.</Text>
+
+          <View style={styles.visibilityRow}>
+            <Text style={[styles.visibilityLabel, { color: colors.text }]}>Ad</Text>
+            <VisibilitySelector
+              value={visibility.name_visibility}
+              onChange={(value) => changeVisibility('name_visibility', value)}
+            />
+          </View>
+
+          <View style={styles.visibilityRow}>
+            <Text style={[styles.visibilityLabel, { color: colors.text }]}>Soyad</Text>
+            <VisibilitySelector
+              value={visibility.surname_visibility}
+              onChange={(value) => changeVisibility('surname_visibility', value)}
+            />
+          </View>
+
+          <View style={styles.visibilityRow}>
+            <Text style={[styles.visibilityLabel, { color: colors.text }]}>Kullanıcı Adı</Text>
+            <VisibilitySelector
+              value={visibility.username_visibility}
+              onChange={(value) => changeVisibility('username_visibility', value)}
+            />
+          </View>
+
+          <View style={styles.visibilityRow}>
+            <Text style={[styles.visibilityLabel, { color: colors.text }]}>Uygulamaya Katılma</Text>
+            <VisibilitySelector
+              value={visibility.created_date_visibility}
+              onChange={(value) => changeVisibility('created_date_visibility', value)}
+            />
+          </View>
+
+          <View style={styles.visibilityRow}>
+            <Text style={[styles.visibilityLabel, { color: colors.text }]}>Profil Fotoğrafı</Text>
+            <VisibilitySelector
+              value={visibility.profile_photo_visibility}
+              onChange={(value) => changeVisibility('profile_photo_visibility', value)}
+            />
+          </View>
+
+          <View style={styles.visibilityRow}>
+            <Text style={[styles.visibilityLabel, { color: colors.text }]}>Doğum Tarihi</Text>
+            <VisibilitySelector
+              value={visibility.birth_date_visibility}
+              onChange={(value) => changeVisibility('birth_date_visibility', value)}
+            />
+          </View>
+
+          <View style={styles.visibilityRow}>
+            <Text style={[styles.visibilityLabel, { color: colors.text }]}>E-posta</Text>
+            <VisibilitySelector
+              value={visibility.email_visibility}
+              onChange={(value) => changeVisibility('email_visibility', value)}
+            />
+          </View>
+
+          <Button
+            label={isUpdatingVisibility ? 'Kaydediliyor...' : 'Görünürlükleri Kaydet'}
+            onPress={handleSaveVisibility}
+            disabled={isUpdatingVisibility}
+            style={styles.saveVisibilityBtn}
+          />
+        </View>
       )}
 
       <Button
@@ -194,40 +381,66 @@ const styles = StyleSheet.create({
   logoutBtn: {
     marginTop: 16,
   },
-
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 4,
   },
-
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 16,
   },
-
-   label: {
+  label: {
     fontSize: 14,
     fontWeight: '500',
   },
-
   value: {
     fontSize: 15,
     fontWeight: '600',
     flexShrink: 1,
     textAlign: 'right',
   },
-
-   photoRow: {
+  photoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
   },
-
+  visibilityOptions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  visibilityOption: {
+    flex: 1,
+    minHeight: 42,
+    borderWidth: 1,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  visibilityOptionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  visibilityRow: {
+    gap: 10,
+  },
+  visibilityLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  description: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: -10,
+  },
+  saveVisibilityBtn: {
+    marginTop: 4,
+  },
 });
-
 
 const formatBirthDate = (date?: string | null) => {
   if (!date) return 'Belirtilmemiş';

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changePassword, createUser, getUsers, verifyEmail, savePassword, googleCallback, getInfos, login, sendFriendRequest, acceptFriendsRequest, updateProfile, showResetPasswordPage } from "../controllers/UserController";
+import { changePassword, createUser, getUsers, verifyEmail, savePassword, googleCallback, getInfos, login, sendFriendRequest, acceptFriendsRequest, updateProfile, showResetPasswordPage, updateProfileVisibility } from "../controllers/UserController";
 import passport from "../services/GoogleService";
 import "../services/FacebookService";
 import { authMiddleware } from "../middlewares/authMiddleware";
@@ -329,6 +329,78 @@ router.get("/users/:id", authMiddleware ,getInfos);
  *         description: Unauthorized
  */
 router.patch("/users/:id", authMiddleware, updateProfile);
+
+
+/**
+ * @openapi
+ * paths:
+ *   /users/me/visibility:
+ *     patch:
+ *       summary: Updates the visibility settings of the authenticated user's profile information
+ *       tags:
+ *         - Users
+ *       security:
+ *         - bearerAuth: []
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name_visibility:
+ *                   type: string
+ *                   enum:
+ *                     - public
+ *                     - friends
+ *                     - private
+ *                 surname_visibility:
+ *                   type: string
+ *                   enum:
+ *                     - public
+ *                     - friends
+ *                     - private
+ *                 username_visibility:
+ *                   type: string
+ *                   enum:
+ *                     - public
+ *                     - friends
+ *                     - private
+ *                 created_date_visibility:
+ *                   type: string
+ *                   enum:
+ *                     - public
+ *                     - friends
+ *                     - private
+ *                 profile_photo_visibility:
+ *                   type: string
+ *                   enum:
+ *                     - public
+ *                     - friends
+ *                     - private
+ *                 birth_date_visibility:
+ *                   type: string
+ *                   enum:
+ *                     - public
+ *                     - friends
+ *                     - private
+ *                 email_visibility:
+ *                   type: string
+ *                   enum:
+ *                     - public
+ *                     - friends
+ *                     - private
+ *       responses:
+ *         200:
+ *           description: Profile visibility updated successfully
+ *         400:
+ *           description: No valid visibility fields or invalid visibility value
+ *         401:
+ *           description: Unauthorized
+ *         404:
+ *           description: User not found
+ */
+router.patch("/users/me/visibility", authMiddleware, updateProfileVisibility);
 
 
 /**

@@ -1,5 +1,13 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
 
+
+export enum Visibility {
+    PUBLIC = "public",
+    FRIENDS = "friends",
+    PRIVATE = "private",
+}
+
+
 @Entity()
 export class User{
 
@@ -7,16 +15,28 @@ export class User{
     id!: number;
 
     @Column()
-    name!: string;  // public
+    name!: string;
+
+    @Column({ type: "enum", enum: Visibility, default: Visibility.PUBLIC })
+    name_visibility!: Visibility;
 
     @Column()
-    surname!: string;   // public
+    surname!: string;
+
+    @Column({ type: "enum", enum: Visibility, default: Visibility.PUBLIC })
+    surname_visibility!: Visibility;
 
     @Column({ unique: true })
-    username!: string;  // public
+    username!: string;
+
+    @Column({ type: "enum", enum: Visibility, default: Visibility.PUBLIC })
+    username_visibility!: Visibility;
 
     @Column({ unique: true, nullable: true })
-    email!: string; // private
+    email!: string;
+
+    @Column({ type: "enum", enum: Visibility, default: Visibility.PRIVATE })
+    email_visibility!: Visibility;
 
     @Column({ nullable: true, select: false })
     password!: string;  
@@ -33,14 +53,23 @@ export class User{
     @CreateDateColumn()
     created_date!: Date;
 
+    @Column({ type: "enum", enum: Visibility, default: Visibility.PRIVATE })
+    created_date_visibility!: Visibility;
+
     @UpdateDateColumn()
     updated_date!: Date;
 
     @Column({ nullable: true })
-    profile_photo!: string;     // friends-only
+    profile_photo!: string;
+
+    @Column({ type: "enum", enum: Visibility, default: Visibility.FRIENDS })
+    profile_photo_visibility!: Visibility;
 
     @Column({ nullable: true })
-    birth_date!: Date;  // friends-only
+    birth_date!: Date;
+
+    @Column({ type: "enum", enum: Visibility, default: Visibility.FRIENDS })
+    birth_date_visibility!: Visibility;
 
     @Column({ nullable: true })
     password_reset_token!: string;
@@ -52,7 +81,7 @@ export class User{
     google_id!: string;
 
     @Column({ default: "email"})
-    auth_provider!: string;  // private
+    auth_provider!: string;
 
     @Column({ nullable: true })
     facebook_id!: string;

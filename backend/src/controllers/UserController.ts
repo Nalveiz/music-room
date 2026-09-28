@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
-import { User } from "../entities/User";
+import { User, Visibility } from "../entities/User";
 import bcrypt from "bcryptjs";
 import * as crypto from "crypto";
 import { sendVerificationEmail, sendResetPassword } from "../services/EmailService";
@@ -268,6 +268,55 @@ export const updateProfile = async (req: Request, res: Response) => {
     })
 
 };
+
+
+export const updateProfileVisibility = async (req: Request, res: Response) => {
+
+    const visibilityFields = ["name_visibility", "surname_visibility", "username_visibility", "email_visibility", "created_date_visibility", "profile_photo_visibility", "birth_date_visibility"] as const;
+
+    type visibilityField = typeof visibilityFields[number];
+    const userId = req.userId;
+    const updates: Partial<Record<visibilityField, Visibility>> = {};
+
+    for (const field of visibilityFields){
+        if (req.body[field] !== "undifined"){
+
+            const value = req.body[field];
+
+            if (!Object.values(Visibility).includes(value)){
+                return res.status(400).json({ message: `Invalid visibility value for ${field}`});
+            }
+
+            updates[field] = value;
+        }
+    }
+
+    if (Object.keys(updates).length === 0){
+        return res.status(400).json({ message: "No valid visibility fields to update."});
+    }
+
+    const userRepo = AppDataSource.getRepository(User);
+    const user = await userRepo.findOneBy({id:userId});
+
+    if (!user){
+        return res.status(400).json({ message: "User not found."});
+    }
+
+    Object.assign(user, updates);
+    await userRepo.save(user);
+
+    return res.status(200).json({ message: "Profile visibility updated sucessfully.", visibility: {
+        name_visibility: user.name_visibility,
+        surname_visibility: user.surname_visibility,
+        username_visibility: user.username_visibility,
+        created_date_visibility: user.created_date_visibility,
+        profile_photo_visibility: user.profile_photo_visibility,
+        birth_date_visibility: user.birth_date_visibility,
+        email_visibility: user.email_visibility
+        }
+    })
+
+}
 
 
 export const login = async (req: Request, res: Response) => {

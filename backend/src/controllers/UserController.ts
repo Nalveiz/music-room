@@ -193,6 +193,9 @@ export const googleCallback = async (req: Request, res: Response) => {
 
     const redirectURI = `musicroom://auth/google?token=${encodeURIComponent(token)}&user=${encodeURIComponent(JSON.stringify(userData))}`;
 
+    console.log("GOOGLE CALLBACK ÇALIŞTI");
+    console.log("REDIRECT:", redirectURI);
+
     return res.redirect(redirectURI);
 };
 

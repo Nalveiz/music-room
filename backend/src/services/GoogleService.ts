@@ -17,6 +17,9 @@ passport.use(
             try{
                 const userRepo = AppDataSource.getRepository(User);
                 const email = profile.emails?.[0]?.value;
+
+                if (!email) return cb(new Error("Google email alınamadı"), false);
+
                 let user = await userRepo.findOneBy({email});
     
                 if (!user){

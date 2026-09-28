@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Formik } from 'formik';
 import { router } from 'expo-router';
-import { LogIn } from 'lucide-react-native';
+import { Music2 } from 'lucide-react-native';
 import { AuthScreenWrapper } from '@/src/components/common/AuthScreenWrapper';
 import { FormInput } from '@/src/components/common/FormInput';
 import { Button } from '@/src/components/common/Button';
@@ -32,9 +32,9 @@ export default function LoginScreen() {
     <AuthScreenWrapper>
       <View style={styles.header}>
         <View style={[styles.iconWrap, { backgroundColor: colors.primary[50] }]}>
-          <LogIn size={32} color={colors.primary[600]} />
+          <Music2 size={32} color={colors.primary[600]} />
         </View>
-        <Text style={[styles.title, { color: colors.text }]}>Tekrar Hoş Geldiniz</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Music Room'a Hoş Geldiniz</Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
           Hesabınıza giriş yapın
         </Text>

@@ -50,7 +50,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Feed',
+          title: 'Ana Sayfa',
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconContainer}>
               {focused && <View style={[styles.activeIndicator, { backgroundColor: activeColor }]} />}
@@ -62,7 +62,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'Profil',
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconContainer}>
               {focused && <View style={[styles.activeIndicator, { backgroundColor: activeColor }]} />}
@@ -74,7 +74,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: 'Uygulama Ayarları',
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconContainer}>
               {focused && <View style={[styles.activeIndicator, { backgroundColor: activeColor }]} />}

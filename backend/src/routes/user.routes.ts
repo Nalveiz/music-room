@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changePassword, createUser, getUsers, verifyEmail, savePassword, googleCallback, getInfos, login, sendFriendRequest, acceptFriendsRequest, updateProfile, showResetPasswordPage, updateProfileVisibility, getProfileVisibility } from "../controllers/UserController";
+import { changePassword, createUser, getUsers, verifyEmail, savePassword, googleCallback, getInfos, login, sendFriendRequest, acceptFriendsRequest, updateProfile, showResetPasswordPage, updateProfileVisibility, getProfileVisibility, getAuthUserProfileInfos } from "../controllers/UserController";
 import passport from "../services/GoogleService";
 import "../services/FacebookService";
 import { authMiddleware } from "../middlewares/authMiddleware";
@@ -359,6 +359,26 @@ router.get("/users/me/visibility", authMiddleware, getProfileVisibility)
  *         description: Unauthorized
 */
 router.get("/users/:id", authMiddleware ,getInfos);
+
+
+/**
+ * @swagger
+ * /users/me/profile:
+ *   get:
+ *     summary: Get authenticated user's profile information
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Authenticated user's profile information retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
+router.get("/users/me/profile", authMiddleware ,getAuthUserProfileInfos
+);
 
 
 /**

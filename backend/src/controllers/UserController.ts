@@ -199,7 +199,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     return res.redirect(redirectURI);
 };
 
-
+// visibility changing! rename and edit. this will use for get profile infos from other user
 export const getInfos = async (req: Request, res: Response) => {
 
     const viewerId = req.userId;
@@ -214,7 +214,7 @@ export const getInfos = async (req: Request, res: Response) => {
 
     const public_info = { name: user.name, surname: user.surname, username: user.username};
 
-    const friendship_info = { profile_photo: user.profile_photo, birth_date: user.birth_date};
+    const friendship_info = { profile_photo: user.profile_photo, birth_date: user.birth_date, created_date: user.created_date };
 
     const private_info = { email: user.email, auth_provider: user.auth_provider};
 
@@ -227,6 +227,29 @@ export const getInfos = async (req: Request, res: Response) => {
     }
 
     return res.status(200).json({ ...public_info });
+
+};
+
+// get all profile infos for auth user for profile page
+export const getAuthUserProfileInfos = async (req: Request, res: Response) => {
+
+    const userRepo = AppDataSource.getRepository(User);
+    const user = await userRepo.findOneBy({id :req.userId});
+
+    if (!user){
+        return res.status(404).json({message: "User not found!"});
+    }
+
+    return res.status(200).json({
+        name: user.name,
+        surname: user.surname,
+        username: user.username,
+        profile_photo: user.profile_photo,
+        birth_date: user.birth_date,
+        created_date: user.created_date,
+        email: user.email,
+        auth_provider: user.auth_provider,
+    });
 
 };
 

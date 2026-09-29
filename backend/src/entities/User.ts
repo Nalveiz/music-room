@@ -53,7 +53,7 @@ export class User{
     @CreateDateColumn()
     created_date!: Date;
 
-    @Column({ type: "enum", enum: Visibility, default: Visibility.PRIVATE })
+    @Column({ type: "enum", enum: Visibility, default: Visibility.FRIENDS })
     created_date_visibility!: Visibility;
 
     @UpdateDateColumn()

@@ -111,6 +111,32 @@ export const authApi = baseApi.injectEndpoints({
     }),
   }),
 
+  getAuthUserProfile: builder.query<IUserProfile, void>({
+    query: () => 'users/me/profile',
+
+    transformResponse: (response: {
+      name: string;
+      surname: string;
+      username: string;
+      profile_photo?: string | null;
+      birth_date?: string | null;
+      created_date?: string | null;
+      email?: string;
+      auth_provider?: string;
+    }): IUserProfile => {
+      return {
+        name: response.name,
+        surname: response.surname,
+        username: response.username,
+        profile_photo: response.profile_photo ?? null,
+        birth_date: response.birth_date ?? null,
+        created_date: response.created_date ?? null,
+        email: response.email,
+        auth_provider: response.auth_provider,
+      };
+    },
+    providesTags: ['Profile'],
+  }),
 
   }),
 });
@@ -125,4 +151,5 @@ export const {
   useRequestResetPasswordMutation,
   useGetProfileVisibilityQuery,
   useUpdateProfileVisibilityMutation,
+  useGetAuthUserProfileQuery,
 } = authApi;

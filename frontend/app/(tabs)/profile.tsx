@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
-import { useGetProfileQuery, useGetProfileVisibilityQuery, useUpdateProfileVisibilityMutation } from '@/src/store/api/authApi';
+import { useGetProfileVisibilityQuery, useUpdateProfileVisibilityMutation, useGetAuthUserProfileQuery } from '@/src/store/api/authApi';
 import { BaseComponent } from '@/src/core/base/BaseComponent';
 import { useThemeColors } from '@/src/theme/ThemeProvider';
 import { ErrorHandler } from '@/src/core/exceptions/ErrorHandler';
 import { Button } from '@/src/components/common/Button';
 import { useAuth } from '@/src/core/auth/AuthProvider';
-import { LogOut } from 'lucide-react-native';
 import { IProfileVisibility, Visibility } from '@/src/types';
 
 
@@ -14,13 +13,13 @@ export default function ProfileScreen() {
   const colors = useThemeColors();
   const { user, signOut } = useAuth();
   const userId = user?.id;
-  
-  const { data, isLoading, isError, error, refetch, } = useGetProfileQuery(userId!, {skip: !userId,});
-  
+
+  const { data, isLoading, isError, error, refetch, } = useGetAuthUserProfileQuery();
+
   const { data: visibilityData, isLoading: isVisibilityLoading, isError: isVisibilityError, error: visibilityError, } = useGetProfileVisibilityQuery();
-  
+
   const [updateProfileVisibility, {isLoading: isUpdatingVisibility,},] = useUpdateProfileVisibilityMutation();
-  
+
   const [visibility, setVisibility] = useState<IProfileVisibility | null>(null);
 
   const [saveMessage, setSaveMessage] = useState<{
@@ -34,15 +33,26 @@ export default function ProfileScreen() {
     }
   }, [visibilityData]);
 
-  if (isVisibilityError){
-    ErrorHandler.log(visibilityError, 'ProfileScreen.getProfileVisibility');
-  }
+  useEffect(() => {
+    if (isVisibilityError) {
+      ErrorHandler.log(visibilityError, 'ProfileScreen.getProfileVisibility');
+    }
+  }, [isVisibilityError, visibilityError]);
 
-  const handleRetry= useCallback(() => refetch(), [refetch]);
+  const handleRetry = useCallback(() => refetch(), [refetch]);
 
-  if (isError) {
-    ErrorHandler.log(error, 'ProfileScreen.getProfile');
-  }
+  useEffect(() => {
+    if (isError) {
+      ErrorHandler.log(error, 'ProfileScreen.getProfile');
+    }
+  }, [isError, error]);
+
+  // check visibility
+
+  const isVisibleAs = (
+    field: keyof IProfileVisibility,
+    targetVisibility: Visibility
+  ) => { return visibility?.[field] === targetVisibility; };
 
   // change visibility
 
@@ -51,7 +61,7 @@ export default function ProfileScreen() {
     value: Visibility
   ) => {
     setVisibility((current) => {
-      if (!current){
+      if (!current) {
         return current;
       }
       return { ...current, [field]: value, };
@@ -64,24 +74,24 @@ export default function ProfileScreen() {
     if (!visibility) {
       return;
     }
-    
+
     try {
-      
+
       const response = await updateProfileVisibility(visibility).unwrap();
 
-      setSaveMessage({ type: 'success', message: response.message || 'Görünürlük ayarları başarıyla güncellendi.',});
+      setSaveMessage({ type: 'success', message: response.message || 'Görünürlük ayarları başarıyla güncellendi.', });
 
       setTimeout(() => { setSaveMessage(null); }, 3000);
 
-    } catch(error: any){
+    } catch (error: any) {
       ErrorHandler.log(error, 'ProfileScreen.updateProfileVisibility');
 
-      setSaveMessage({ type: 'error', message: error?.data?.message || 'Görünürlük ayarları güncellenirken bir hata oluştu.'});
+      setSaveMessage({ type: 'error', message: error?.data?.message || 'Görünürlük ayarları güncellenirken bir hata oluştu.' });
 
       setTimeout(() => { setSaveMessage(null); }, 3000);
 
     }
-    
+
   };
 
   // visibility label
@@ -100,54 +110,54 @@ export default function ProfileScreen() {
   };
 
   const VisibilitySelector = ({
-      value,
-      onChange,
-    }: {
-      value: Visibility;
-      onChange: (value: Visibility) => void;
-    }) => {
-      return (
-        <View style={styles.visibilityOptions}>
-          {(['public', 'friends', 'private'] as Visibility[]).map(
-            (option) => {
-              const isSelected = value === option;
-  
-              return (
-                <Pressable
-                  key={option}
-                  onPress={() => onChange(option)}
+    value,
+    onChange,
+  }: {
+    value: Visibility;
+    onChange: (value: Visibility) => void;
+  }) => {
+    return (
+      <View style={styles.visibilityOptions}>
+        {(['public', 'friends', 'private'] as Visibility[]).map(
+          (option) => {
+            const isSelected = value === option;
+
+            return (
+              <Pressable
+                key={option}
+                onPress={() => onChange(option)}
+                style={[
+                  styles.visibilityOption,
+                  {
+                    borderColor: isSelected
+                      ? colors.primary[600]
+                      : colors.border,
+
+                    backgroundColor: isSelected
+                      ? colors.primary[600]
+                      : colors.surface,
+                  },
+                ]}
+              >
+                <Text
                   style={[
-                    styles.visibilityOption,
+                    styles.visibilityOptionText,
                     {
-                      borderColor: isSelected
-                        ? colors.primary[600]
-                        : colors.border,
-  
-                      backgroundColor: isSelected
-                        ? colors.primary[600]
-                        : colors.surface,
+                      color: isSelected
+                        ? '#ffffff'
+                        : colors.text,
                     },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.visibilityOptionText,
-                      {
-                        color: isSelected
-                          ? '#ffffff'
-                          : colors.text,
-                      },
-                    ]}
-                  >
-                    {getVisibilityLabel(option)}
-                  </Text>
-                </Pressable>
-              );
-            }
-          )}
-        </View>
-      );
-    };
+                  {getVisibilityLabel(option)}
+                </Text>
+              </Pressable>
+            );
+          }
+        )}
+      </View>
+    );
+  };
 
   return (
     <BaseComponent
@@ -159,88 +169,269 @@ export default function ProfileScreen() {
       skeletonCount={1}
     >
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Profil</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Profil Bilgileri</Text>
       </View>
 
-      {data && (
+      {data && visibility && (
         <>
-        {/* General public infos */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
-        >
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>Profil Bilgileri</Text>
+          {/* public infos */}
+          {(visibility.name_visibility === 'public' ||
+            visibility.surname_visibility === 'public' ||
+            visibility.username_visibility === 'public' ||
+            visibility.created_date_visibility === 'public' ||
+            visibility.profile_photo_visibility === 'public' ||
+            visibility.birth_date_visibility === 'public' ||
+            visibility.email_visibility === 'public') && (
+            <View style={[ styles.card,
+                { backgroundColor: colors.surface, borderColor: colors.border, },
+              ]} >
+              <Text style={[styles.sectionTitle, { color: colors.text }]}> Herkese Açık </Text>
 
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, {color: colors.textMuted}]}>Ad</Text>
-            <Text style={[styles.value, {color: colors.text}]}>{data.name}</Text>
-          </View>
+              {isVisibleAs('name_visibility', 'public') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Ad </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {data.name} </Text>
+                </View>
+              )}
 
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, {color: colors.textMuted}]}>Soyad</Text>
-            <Text style={[styles.value, {color: colors.text}]}>{data.surname}</Text>
-          </View>
+              {isVisibleAs('surname_visibility', 'public') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Soyad </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {data.surname} </Text>
+                </View>
+              )}
 
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, {color: colors.textMuted}]}>Kullanıcı Adı</Text>
-            <Text style={[styles.value, {color: colors.text}]}>@{data.username}</Text>
-          </View>
-        </View>
+              {isVisibleAs('username_visibility', 'public') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Kullanıcı Adı </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> @{data.username} </Text>
+                </View>
+              )}
 
-        <View 
-          style={[styles.card, {backgroundColor: colors.surface, borderColor: colors.border,},]}
-        >
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>Sadece Arkadaşlar</Text>
-          
-          <View style={styles.photoRow}>
-            {data.profile_photo ? (
-              <Image
-                source={{ uri: data.profile_photo }}
-                style={styles.avatar}
-              />
-            ) : (
-              <View style={[styles.avatar, { backgroundColor: colors.primary[600] }, ]}
-              >
-                <Text style={styles.avatarText}>{data.name[0]}{data.surname[0]}
+              {isVisibleAs('created_date_visibility', 'public') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Uygulamaya Katılma Tarihi </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {formatCreatedDate(data.created_date)} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('profile_photo_visibility', 'public') && (
+                <View style={styles.photoRow}>
+                  {data.profile_photo ? (
+                    <Image source={{ uri: data.profile_photo }} style={styles.avatar} />
+                  ) : (
+                    <View style={[ styles.avatar, { backgroundColor: colors.primary[600] },]}>
+                      <Text style={styles.avatarText}> {data.name[0]} {data.surname[0]}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.profileInfo}>
+                    <Text style={[styles.label, { color: colors.textMuted }]}> Profil Fotoğrafı </Text>
+                    <Text style={[styles.value, { color: colors.text }]}> 
+                      {data.profile_photo ? 'Eklendi' : 'Eklenmedi'}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {isVisibleAs('birth_date_visibility', 'public') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Doğum Tarihi </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {formatBirthDate(data.birth_date)} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('email_visibility', 'public') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> E-posta </Text>
+                  <Text style={[styles.value, { color: colors.text }]} numberOfLines={1}> {data.email ?? 'Not added'} </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* friends infos */}
+          {(visibility.name_visibility === 'friends' ||
+            visibility.surname_visibility === 'friends' ||
+            visibility.username_visibility === 'friends' ||
+            visibility.created_date_visibility === 'friends' ||
+            visibility.profile_photo_visibility === 'friends' ||
+            visibility.birth_date_visibility === 'friends' ||
+            visibility.email_visibility === 'friends') && (
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Sadece Arkadaşlar
+              </Text>
+
+              {isVisibleAs('name_visibility', 'friends') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Ad </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {data.name} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('surname_visibility', 'friends') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Soyad </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {data.surname} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('username_visibility', 'friends') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Kullanıcı Adı </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> @{data.username} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('profile_photo_visibility', 'friends') && (
+                <View style={styles.photoRow}>
+                  {data.profile_photo ? (
+                    <Image source={{ uri: data.profile_photo }} style={styles.avatar} />
+                  ) : (
+                    <View style={[ styles.avatar, { backgroundColor: colors.primary[600] },]}>
+                      <Text style={styles.avatarText}> {data.name[0]} {data.surname[0]}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.profileInfo}>
+                    <Text style={[styles.label, { color: colors.textMuted }]}> Profil Fotoğrafı </Text>
+                    <Text style={[styles.value, { color: colors.text }]}> 
+                      {data.profile_photo ? 'Eklendi' : 'Eklenmedi'}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {isVisibleAs('birth_date_visibility', 'friends') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Doğum Tarihi </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {formatBirthDate(data.birth_date)} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('created_date_visibility', 'friends') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Uygulamaya Katılma Tarihi </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {formatCreatedDate(data.created_date)} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('email_visibility', 'friends') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> E-posta </Text>
+                  <Text style={[styles.value, { color: colors.text }]} numberOfLines={1}> {data.email ?? 'Not added'} </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* private infos */}
+          {(visibility.name_visibility === 'private' ||
+            visibility.surname_visibility === 'private' ||
+            visibility.username_visibility === 'private' ||
+            visibility.created_date_visibility === 'private' ||
+            visibility.profile_photo_visibility === 'private' ||
+            visibility.birth_date_visibility === 'private' ||
+            visibility.email_visibility === 'private' ||
+            data.auth_provider) && (
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Gizli Bilgiler
+              </Text>
+
+              {isVisibleAs('name_visibility', 'private') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Ad </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {data.name} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('surname_visibility', 'private') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Soyad </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {data.surname} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('username_visibility', 'private') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Kullanıcı Adı </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> @{data.username} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('created_date_visibility', 'private') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Uygulamaya Katılma Tarihi </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {formatCreatedDate(data.created_date)} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('profile_photo_visibility', 'private') && (
+                <View style={styles.photoRow}>
+                  {data.profile_photo ? (
+                    <Image source={{ uri: data.profile_photo }} style={styles.avatar} />
+                  ) : (
+                    <View style={[ styles.avatar, { backgroundColor: colors.primary[600] },]}>
+                      <Text style={styles.avatarText}> {data.name[0]} {data.surname[0]}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.profileInfo}>
+                    <Text style={[styles.label, { color: colors.textMuted }]}> Profil Fotoğrafı </Text>
+                    <Text style={[styles.value, { color: colors.text }]}> 
+                      {data.profile_photo ? 'Eklendi' : 'Eklenmedi'}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {isVisibleAs('birth_date_visibility', 'private') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> Doğum Tarihi </Text>
+                  <Text style={[styles.value, { color: colors.text }]}> {formatBirthDate(data.birth_date)} </Text>
+                </View>
+              )}
+
+              {isVisibleAs('email_visibility', 'private') && (
+                <View style={styles.infoRow}>
+                  <Text style={[styles.label, { color: colors.textMuted }]}> E-posta </Text>
+                  <Text style={[styles.value, { color: colors.text }]} numberOfLines={1}> {data.email ?? 'Not added'} </Text>
+                </View>
+              )}
+
+              {/* static auth_provider update it from backend */}
+              <View style={styles.infoRow}>
+                <Text style={[styles.label, { color: colors.textMuted }]}>
+                  Giriş Yöntemi
+                </Text>
+                <Text style={[styles.value, { color: colors.text }]}>
+                  {data.auth_provider || 'Email'}
                 </Text>
               </View>
-            )}
-
-            <View style={styles.profileInfo}>
-              <Text style={[styles.label,{ color: colors.textMuted },]}> Profil Fotoğrafı</Text>
-              <Text style={[styles.value, { color: colors.text }]}>
-                {data.profile_photo ? 'Eklendi' : 'Eklenmedi'}
-              </Text>
             </View>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, {color: colors.textMuted}]}>Doğum Tarihi</Text>
-            <Text style={[styles.value, {color: colors.text}]}>{formatBirthDate(data.birth_date)}</Text>
-          </View>
-
-        </View>
-          
-        <View 
-          style={[styles.card, {backgroundColor: colors.surface, borderColor: colors.border,},]}
-        >
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>Gizli Bilgiler</Text>
-          
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, {color: colors.textMuted}]}>E-posta</Text>
-            <Text style={[styles.value, {color: colors.text}]}numberOfLines={1}>{data.email ?? 'Not added'}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, {color: colors.textMuted}]}>Giriş Yöntemi</Text>
-            <Text style={[styles.value, {color: colors.text}]}>{data.auth_provider ? data.auth_provider : 'Email'}</Text>
-          </View>
-
-
-        </View>
-      </>
+          )}
+        </>
       )}
 
       {/* visibility settings */}
@@ -321,10 +512,10 @@ export default function ProfileScreen() {
         </View>
       )}
 
-     {saveMessage && (
-        <View style={[ styles.saveMessage,  { backgroundColor: saveMessage.type === 'success' ? '#E8F5E9': '#FFEBEE', borderColor: saveMessage.type === 'success'? '#4CAF50': '#F44336', }, ]}> 
+      {saveMessage && (
+        <View style={[styles.saveMessage, { backgroundColor: saveMessage.type === 'success' ? '#E8F5E9' : '#FFEBEE', borderColor: saveMessage.type === 'success' ? '#4CAF50' : '#F44336', },]}>
           <Text style={[styles.saveMessageText,
-            { color: saveMessage.type === 'success' ? colors.primary[600] : colors.text,}, ]} > {saveMessage.message} 
+          { color: saveMessage.type === 'success' ? colors.primary[600] : colors.text, },]} > {saveMessage.message}
           </Text>
         </View>
       )}
@@ -481,6 +672,18 @@ const styles = StyleSheet.create({
 });
 
 const formatBirthDate = (date?: string | null) => {
+  if (!date) return 'Belirtilmemiş';
+
+  const parsedDate = new Date(date);
+
+  if (isNaN(parsedDate.getTime())) {
+    return 'Belirtilmemiş';
+  }
+
+  return parsedDate.toLocaleDateString('tr-TR');
+};
+
+const formatCreatedDate = (date?: string | null) => {
   if (!date) return 'Belirtilmemiş';
 
   const parsedDate = new Date(date);

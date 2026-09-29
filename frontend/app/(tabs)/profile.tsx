@@ -22,6 +22,8 @@ export default function ProfileScreen() {
 
   const [visibility, setVisibility] = useState<IProfileVisibility | null>(null);
 
+  const [savedVisibility, setSavedVisibility] = useState<IProfileVisibility | null> (null);
+
   const [saveMessage, setSaveMessage] = useState<{
     type: 'success' | 'error';
     message: string;
@@ -30,6 +32,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (visibilityData) {
       setVisibility(visibilityData);
+      setSavedVisibility(visibilityData);
     }
   }, [visibilityData]);
 
@@ -52,7 +55,7 @@ export default function ProfileScreen() {
   const isVisibleAs = (
     field: keyof IProfileVisibility,
     targetVisibility: Visibility
-  ) => { return visibility?.[field] === targetVisibility; };
+  ) => { return savedVisibility?.[field] === targetVisibility; };
 
   // change visibility
 
@@ -78,6 +81,9 @@ export default function ProfileScreen() {
     try {
 
       const response = await updateProfileVisibility(visibility).unwrap();
+
+      setSavedVisibility(response.visibility);
+      // setVisibility(visibility);
 
       setSaveMessage({ type: 'success', message: response.message || 'Görünürlük ayarları başarıyla güncellendi.', });
 
@@ -172,16 +178,16 @@ export default function ProfileScreen() {
         <Text style={[styles.title, { color: colors.text }]}>Profil Bilgileri</Text>
       </View>
 
-      {data && visibility && (
+      {data && savedVisibility && (
         <>
           {/* public infos */}
-          {(visibility.name_visibility === 'public' ||
-            visibility.surname_visibility === 'public' ||
-            visibility.username_visibility === 'public' ||
-            visibility.created_date_visibility === 'public' ||
-            visibility.profile_photo_visibility === 'public' ||
-            visibility.birth_date_visibility === 'public' ||
-            visibility.email_visibility === 'public') && (
+          {(savedVisibility?.name_visibility === 'public' ||
+            savedVisibility?.surname_visibility === 'public' ||
+            savedVisibility?.username_visibility === 'public' ||
+            savedVisibility?.created_date_visibility === 'public' ||
+            savedVisibility?.profile_photo_visibility === 'public' ||
+            savedVisibility?.birth_date_visibility === 'public' ||
+            savedVisibility?.email_visibility === 'public') && (
             <View style={[ styles.card,
                 { backgroundColor: colors.surface, borderColor: colors.border, },
               ]} >
@@ -252,13 +258,13 @@ export default function ProfileScreen() {
           )}
 
           {/* friends infos */}
-          {(visibility.name_visibility === 'friends' ||
-            visibility.surname_visibility === 'friends' ||
-            visibility.username_visibility === 'friends' ||
-            visibility.created_date_visibility === 'friends' ||
-            visibility.profile_photo_visibility === 'friends' ||
-            visibility.birth_date_visibility === 'friends' ||
-            visibility.email_visibility === 'friends') && (
+          {(savedVisibility?.name_visibility === 'friends' ||
+            savedVisibility?.surname_visibility === 'friends' ||
+            savedVisibility?.username_visibility === 'friends' ||
+            savedVisibility?.created_date_visibility === 'friends' ||
+            savedVisibility?.profile_photo_visibility === 'friends' ||
+            savedVisibility?.birth_date_visibility === 'friends' ||
+            savedVisibility?.email_visibility === 'friends') && (
             <View
               style={[
                 styles.card,
@@ -337,13 +343,13 @@ export default function ProfileScreen() {
           )}
 
           {/* private infos */}
-          {(visibility.name_visibility === 'private' ||
-            visibility.surname_visibility === 'private' ||
-            visibility.username_visibility === 'private' ||
-            visibility.created_date_visibility === 'private' ||
-            visibility.profile_photo_visibility === 'private' ||
-            visibility.birth_date_visibility === 'private' ||
-            visibility.email_visibility === 'private' ||
+          {(savedVisibility?.name_visibility === 'private' ||
+            savedVisibility?.surname_visibility === 'private' ||
+            savedVisibility?.username_visibility === 'private' ||
+            savedVisibility?.created_date_visibility === 'private' ||
+            savedVisibility?.profile_photo_visibility === 'private' ||
+            savedVisibility?.birth_date_visibility === 'private' ||
+            savedVisibility?.email_visibility === 'private' ||
             data.auth_provider) && (
             <View
               style={[

@@ -22,21 +22,27 @@ export default function ProfileScreen() {
   const [updateProfileVisibility, {isLoading: isUpdatingVisibility,},] = useUpdateProfileVisibilityMutation();
   
   const [visibility, setVisibility] = useState<IProfileVisibility | null>(null);
+
+  const [saveMessage, setSaveMessage] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+
   useEffect(() => {
     if (visibilityData) {
       setVisibility(visibilityData);
     }
   }, [visibilityData]);
 
-  // if (isVisibilityError){
-  //   ErrorHandler.log(visibilityError, 'ProfileScreen.getProfileVisibility');
-  // }
+  if (isVisibilityError){
+    ErrorHandler.log(visibilityError, 'ProfileScreen.getProfileVisibility');
+  }
 
   const handleRetry= useCallback(() => refetch(), [refetch]);
 
-  // if (isError) {
-  //   ErrorHandler.log(error, 'ProfileScreen.getProfile');
-  // }
+  if (isError) {
+    ErrorHandler.log(error, 'ProfileScreen.getProfile');
+  }
 
   // change visibility
 
@@ -60,9 +66,20 @@ export default function ProfileScreen() {
     }
     
     try {
-      await updateProfileVisibility(visibility).unwrap();
-    } catch(error){
+      
+      const response = await updateProfileVisibility(visibility).unwrap();
+
+      setSaveMessage({ type: 'success', message: response.message || 'Görünürlük ayarları başarıyla güncellendi.',});
+
+      setTimeout(() => { setSaveMessage(null); }, 3000);
+
+    } catch(error: any){
       ErrorHandler.log(error, 'ProfileScreen.updateProfileVisibility');
+
+      setSaveMessage({ type: 'error', message: error?.data?.message || 'Görünürlük ayarları güncellenirken bir hata oluştu.'});
+
+      setTimeout(() => { setSaveMessage(null); }, 3000);
+
     }
     
   };
@@ -304,6 +321,14 @@ export default function ProfileScreen() {
         </View>
       )}
 
+     {saveMessage && (
+        <View style={[ styles.saveMessage,  { backgroundColor: saveMessage.type === 'success' ? '#E8F5E9': '#FFEBEE', borderColor: saveMessage.type === 'success'? '#4CAF50': '#F44336', }, ]}> 
+          <Text style={[styles.saveMessageText,
+            { color: saveMessage.type === 'success' ? colors.primary[600] : colors.text,}, ]} > {saveMessage.message} 
+          </Text>
+        </View>
+      )}
+
       <Button
         label="Çıkış Yap"
         variant="outline"
@@ -440,6 +465,19 @@ const styles = StyleSheet.create({
   saveVisibilityBtn: {
     marginTop: 4,
   },
+
+  saveMessage: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+
+  saveMessageText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
 });
 
 const formatBirthDate = (date?: string | null) => {

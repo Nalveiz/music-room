@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
-import { useGetProfileVisibilityQuery, useUpdateProfileVisibilityMutation, useGetAuthUserProfileQuery } from '@/src/store/api/authApi';
+import { View, Text, StyleSheet, Image, Pressable, TextInput } from 'react-native';
+import { useGetProfileVisibilityQuery, useUpdateProfileVisibilityMutation, useGetAuthUserProfileQuery, useUpdateAuthUserProfileMutation } from '@/src/store/api/authApi';
 import { BaseComponent } from '@/src/core/base/BaseComponent';
 import { useThemeColors } from '@/src/theme/ThemeProvider';
 import { ErrorHandler } from '@/src/core/exceptions/ErrorHandler';
@@ -20,6 +20,18 @@ export default function ProfileScreen() {
 
   const [updateProfileVisibility, {isLoading: isUpdatingVisibility,},] = useUpdateProfileVisibilityMutation();
 
+  const [updateAuthUserProfile, {isLoading: isUpdatingProfile}] = useUpdateAuthUserProfileMutation(); 
+
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  const [editProfile, setEditProfile] = useState({
+    name: '',
+    surname: '',
+    username: '',
+    profile_photo: '',
+    birth_date: '',
+  });
+
   const [visibility, setVisibility] = useState<IProfileVisibility | null>(null);
 
   const [savedVisibility, setSavedVisibility] = useState<IProfileVisibility | null> (null);
@@ -35,6 +47,18 @@ export default function ProfileScreen() {
       setSavedVisibility(visibilityData);
     }
   }, [visibilityData]);
+
+  useEffect(() => {
+    if (data){
+      setEditProfile({
+        name: data.name ?? '',
+        surname: data.surname ?? '',
+        username: data.username ?? '',
+        profile_photo: data.profile_photo ?? '',
+        birth_date: data.birth_date ?? '',
+      });
+    }
+  }, [data]);
 
   useEffect(() => {
     if (isVisibilityError) {
@@ -98,6 +122,48 @@ export default function ProfileScreen() {
 
     }
 
+  };
+
+  // save profile
+
+  const handleSaveProfile = async () => {
+
+    try{
+      const response = await updateAuthUserProfile({
+        name: editProfile.name.trim(),
+        surname: editProfile.surname.trim(),
+        username: editProfile.username.trim(),
+        profile_photo: editProfile.profile_photo.trim() || null,
+        birth_date: editProfile.birth_date || null,
+      }).unwrap();
+
+      setEditProfile({
+        name: response.name,
+        surname: response.surname,
+        username: response.username,
+        profile_photo: response.profile_photo ?? '',
+        birth_date: response.birth_date ?? '',
+      });
+
+      setIsEditingProfile(false);
+      setSaveMessage({ type: 'success', message: 'Profil bilgileri başarıyla güncellendi.'});
+      
+      setTimeout(() => {
+        setSaveMessage(null)  
+      }, 3000);
+    
+    }catch(error: any){
+
+      ErrorHandler.log(error, 'ProfileScreen.updateProfile');
+
+      setSaveMessage({
+        type: 'error',
+        message: error?.data?.message || 'Profil bilgileri güncellenirken bir hata oluştu.'
+      });
+      setTimeout(() => {
+        setSaveMessage(null)
+      }, 3000);
+    }
   };
 
   // visibility label
@@ -526,6 +592,136 @@ export default function ProfileScreen() {
         </View>
       )}
 
+
+    <View style={[ styles.card, { backgroundColor: colors.surface, borderColor: colors.border, }, ]}>
+      <View style={styles.editProfileHeader}>
+        <View>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}> Profil Bilgilerini Düzenle </Text>
+          <Text style={[styles.description, { color: colors.textMuted }]}> Profil bilgilerini buradan güncelleyebilirsin. </Text>
+        </View>
+
+        {!isEditingProfile && ( <Pressable onPress={() => setIsEditingProfile(true)}
+            style={[ styles.editButton, { borderColor: colors.primary[600] }, ]} >
+            <Text style={[ styles.editButtonText, { color: colors.primary[600] }, ]} > Düzenle </Text>
+          </Pressable> )}
+      </View>
+
+      {isEditingProfile ? (
+        <View style={styles.editProfileForm}>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Ad</Text>
+
+            <TextInput value={editProfile.name} onChangeText={(value) =>
+                setEditProfile((current) => ({ ...current, name: value, })) }
+              placeholder="Ad" placeholderTextColor={colors.textMuted} style={[
+                styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background, },
+              ]} />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Soyad</Text>
+
+            <TextInput value={editProfile.surname} onChangeText={(value) =>
+                setEditProfile((current) => ({ ...current, surname: value, }))
+              } placeholder="Soyad" placeholderTextColor={colors.textMuted} style={[
+                styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background, },
+              ]} />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Kullanıcı Adı</Text>
+
+            <TextInput value={editProfile.username} onChangeText={(value) =>
+                setEditProfile((current) => ({ ...current, username: value, })) }
+                placeholder="Kullanıcı adı" placeholderTextColor={colors.textMuted} autoCapitalize="none" 
+                style={[ styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background, },
+              ]} />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}> Doğum Tarihi </Text>
+
+            <TextInput value={editProfile.birth_date} onChangeText={(value) =>
+                setEditProfile((current) => ({ ...current, birth_date: value, })) }
+              placeholder="YYYY-MM-DD" placeholderTextColor={colors.textMuted} 
+              style={[ styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background, },
+              ]} />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Profil Fotoğrafı</Text>
+
+            <TextInput value={editProfile.profile_photo} onChangeText={(value) =>
+                setEditProfile((current) => ({ ...current, profile_photo: value, })) }
+              placeholder="Profil fotoğrafı URL" placeholderTextColor={colors.textMuted} autoCapitalize="none" 
+              style={[ styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background, },
+              ]} />
+          </View>
+
+          <View style={styles.editActions}>
+            <Button label="İptal" variant="outline" onPress={() => {
+                if (data) {
+                  setEditProfile({
+                    name: data.name ?? '',
+                    surname: data.surname ?? '',
+                    username: data.username ?? '',
+                    profile_photo: data.profile_photo ?? '',
+                    birth_date: data.birth_date ?? '',
+                  });
+                }
+
+                setIsEditingProfile(false);
+              }}
+              style={styles.cancelButton}
+            />
+
+            <Button label={ isUpdatingProfile ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet' } onPress={handleSaveProfile} disabled={isUpdatingProfile} style={styles.updateProfileButton} />
+          </View>
+        </View>
+      ) : (
+        <View style={styles.profileSummary}>
+
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, { color: colors.textMuted }]}>Ad </Text>
+            <Text style={[styles.value, { color: colors.text }]}>{data?.name}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, { color: colors.textMuted }]}>Soyad</Text>
+            <Text style={[styles.value, { color: colors.text }]}>{data?.surname}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, { color: colors.textMuted }]}>Kullanıcı Adı</Text>
+            <Text style={[styles.value, { color: colors.text }]}>@{data?.username}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, { color: colors.textMuted }]}>Doğum Tarihi</Text>
+            <Text style={[styles.value, { color: colors.text }]}>{formatBirthDate(data?.birth_date)}</Text>
+          </View>
+
+          <View style={styles.photoRow}>{data?.profile_photo ? (
+              <Image source={{ uri: data.profile_photo }} style={styles.avatar}/>
+            ) : (
+              <View style={[ styles.avatar, { backgroundColor: colors.primary[600] },]}>
+                <Text style={styles.avatarText}>{data?.name?.[0]}{data?.surname?.[0]}</Text>
+              </View>
+            )}
+
+            <View style={styles.profileInfo}>
+              <Text style={[ styles.label, { color: colors.textMuted },]}>Profil Fotoğrafı</Text>
+              <Text style={[ styles.value, { color: colors.text },]}>
+                {data?.profile_photo ? 'Eklendi' : 'Eklenmedi'}
+              </Text>
+            </View>
+          </View>
+
+        </View>
+      )}
+    </View>
+
       <Button
         label="Çıkış Yap"
         variant="outline"
@@ -674,6 +870,64 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+
+  editProfileHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  marginBottom: 16,
+},
+
+editButton: {
+  borderWidth: 1,
+  borderRadius: 8,
+  paddingVertical: 7,
+  paddingHorizontal: 12,
+},
+
+editButtonText: {
+  fontSize: 14,
+  fontWeight: '600',
+},
+
+editProfileForm: {
+  gap: 14,
+},
+
+inputGroup: {
+  gap: 6,
+},
+
+inputLabel: {
+  fontSize: 14,
+  fontWeight: '600',
+},
+
+input: {
+  minHeight: 46,
+  borderWidth: 1,
+  borderRadius: 8,
+  paddingHorizontal: 12,
+  fontSize: 15,
+},
+
+editActions: {
+  flexDirection: 'row',
+  gap: 10,
+  marginTop: 8,
+},
+
+cancelButton: {
+  flex: 1,
+},
+
+updateProfileButton: {
+  flex: 2,
+},
+
+profileSummary: {
+  gap: 4,
+},
 
 });
 

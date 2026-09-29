@@ -423,7 +423,7 @@ router.get("/users/me/profile", authMiddleware ,getAuthUserProfileInfos
  *       401:
  *         description: Unauthorized
  */
-router.patch("/users/:id", authMiddleware, updateProfile);
+router.patch("/users/me/profile", authMiddleware, updateProfile);
 
 /**
  * @swagger

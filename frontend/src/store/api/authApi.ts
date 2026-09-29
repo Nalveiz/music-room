@@ -138,6 +138,29 @@ export const authApi = baseApi.injectEndpoints({
     providesTags: ['Profile'],
   }),
 
+  updateAuthUserProfile: builder.mutation<{
+    name: string;
+    surname: string;
+    username: string;
+    profile_photo?: string | null;
+    birth_date?: string | null;
+  }, {
+    name?: string;
+    surname?: string;
+    username?: string;
+    profile_photo?: string | null;
+    birth_date?: string | null;
+  
+  }
+  >({
+    query: (body) => ({
+      url: 'users/me/profile',
+      method: 'PATCH',
+      body
+    }),
+    invalidatesTags: ['Profile'],
+  }),
+
   }),
 });
 
@@ -152,4 +175,5 @@ export const {
   useGetProfileVisibilityQuery,
   useUpdateProfileVisibilityMutation,
   useGetAuthUserProfileQuery,
+  useUpdateAuthUserProfileMutation,
 } = authApi;

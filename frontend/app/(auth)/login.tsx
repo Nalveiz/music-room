@@ -96,6 +96,21 @@ export default function LoginScreen() {
                   showToast((error as Error).message);
                 }
               }}
+              style={styles.socialBtn}
+              textColor={colors.primary[600]}
+            />
+
+            <Button
+              label="Facebook ile giriş yap"
+              onPress={async () => {
+                try {
+                  await googleSignIn();
+                } catch (error) {
+                  showToast((error as Error).message);
+                }
+              }}
+              style={styles.socialBtn}
+              textColor={colors.primary[600]}
             />
           </View>
         )}
@@ -150,6 +165,11 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: 8,
+  },
+  socialBtn: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
   },
   footer: {
     flexDirection: 'row',

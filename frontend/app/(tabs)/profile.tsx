@@ -802,7 +802,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 10,
   },
   infoRow: {
     flexDirection: 'row',

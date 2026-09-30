@@ -15,6 +15,7 @@ interface ButtonProps {
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
+  textColor?: string;
 }
 
 export function Button({
@@ -24,6 +25,7 @@ export function Button({
   loading = false,
   disabled = false,
   style,
+  textColor,
 }: ButtonProps) {
   const colors = useThemeColors();
 
@@ -36,8 +38,9 @@ export function Button({
           ? 'transparent'
           : 'transparent';
 
-  const fg =
-    variant === 'primary' || variant === 'secondary'
+  const fg = textColor
+    ? textColor
+    : variant === 'primary' || variant === 'secondary'
       ? '#ffffff'
       : colors.primary[600];
 
